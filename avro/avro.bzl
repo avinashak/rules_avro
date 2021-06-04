@@ -111,7 +111,8 @@ def _new_generator_command(ctx, src_dir, gen_dir):
       encoding=ctx.attr.encoding
     )
 
-  gen_command += " schema {src} {gen_dir}".format(
+  gen_command += " {compile_type} {src} {gen_dir}".format(
+    compile_type=ctx.attr.compile_type,
     src=src_dir,
     gen_dir=gen_dir
   )
@@ -158,10 +159,14 @@ def _impl(ctx):
 avro_gen = rule(
     attrs = {
         "srcs": attr.label_list(
-          allow_files = [".avsc"]
+          allow_files = [".avsc", ".avpr"]
         ),
         "strings": attr.bool(),
         "encoding": attr.string(),
+        "compile_type": attr.string(
+            default="schema",
+            values=["schema", "protocol"],
+        ),
         "files_not_dirs": attr.bool(
             default = False
         ),
@@ -183,7 +188,7 @@ avro_gen = rule(
 
 
 def avro_java_library(
-  name, srcs=[], strings=None, encoding=None, visibility=None, files_not_dirs=False, avro_libs=None):
+  name, srcs=[], strings=None, encoding=None, visibility=None, compile_type=None, files_not_dirs=False, avro_libs=None):
     libs = avro_libs if avro_libs else AVRO_LIBS_LABELS
     tools = libs["tools"]
     deps = [libs["core"]]
@@ -193,6 +198,7 @@ def avro_java_library(
         srcs = srcs,
         strings=strings,
         encoding=encoding,
+        compile_type=compile_type,
         files_not_dirs=files_not_dirs,
         visibility=visibility,
         avro_tools=tools
